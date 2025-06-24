@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: green;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .form-group input[type="file"] {
+            padding: 5px;
+        }
+
+        .form-group button {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .form-group button:hover {
+            background-color: darkgreen;
+        }
+
+        .uploaded-crops {
+            margin-top: 20px;
+        }
+
+        .uploaded-crops h2 {
+            text-align: center;
+        }
+
+        .crop-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .crop-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .crop-item p {
+            margin: 0;
+            flex-grow: 1;
+            padding-left: 10px;
+        }
+
+        .crop-item button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .crop-item button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Your Crop</h1>
+        <div class="form-group">
+            <label for="cropName">Crop Name:</label>
+            <input type="text" id="cropName" placeholder="Enter crop name">
+        </div>
+        <div class="form-group">
+            <label for="cropPrice">Price per unit (RS):</label>
+            <input type="number" id="cropPrice" placeholder="Enter price per unit">
+        </div>
+        <div class="form-group">
+            <label for="cropQuantity">Quantity:</label>
+            <input type="number" id="cropQuantity" placeholder="Enter quantity">
+        </div>
+        <div class="form-group">
+            <label for="cropImage">Crop Image:</label>
+            <input type="file" id="cropImage">
+        </div>
+        <div class="form-group">
+            <button onclick="uploadCrop()">Add Crop</button>
+        </div>
+        <div class="uploaded-crops">
+            <h2>Your Uploaded Crops</h2>
+            <div id="cropList"></div>
+        </div>
+    </div>
+
+    <script>
+        function uploadCrop() {
+            const cropName = document.getElementById('cropName').value;
+            const cropPrice = document.getElementById('cropPrice').value;
+            const cropQuantity = document.getElementById('cropQuantity').value;
+            const cropImage = document.getElementById('cropImage').files[0];
+
+            if (!cropName || !cropPrice || !cropQuantity || !cropImage) {
+                alert('Please fill all fields.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const crop = {
+                    name: cropName,
+                    price: cropPrice,
+                    quantity: cropQuantity,
+                    image: e.target.result
+                };
+
+                let crops = JSON.parse(localStorage.getItem('crops')) || [];
+                crops.push(crop);
+                localStorage.setItem('crops', JSON.stringify(crops));
+
+                displayCrops();
+            };
+            reader.readAsDataURL(cropImage);
+        }
+
+        function displayCrops() {
+            const cropList = document.getElementById('cropList');
+            cropList.innerHTML = '';
+
+            const crops = JSON.parse(localStorage.getItem('crops')) || [];
+            crops.forEach((crop, index) => {
+                const cropItem = document.createElement('div');
+                cropItem.classList.add('crop-item');
+                cropItem.innerHTML = `
+                    <img src="${crop.image}" alt="${crop.name}">
+                    <p><strong>${crop.name}</strong><br>RS ${crop.price} - ${crop.quantity} units</p>
+                    <button onclick="deleteCrop(${index})">Delete</button>
+                `;
+                cropList.appendChild(cropItem);
+            });
+        }
+
+        function deleteCrop(index) {
+            let crops = JSON.parse(localStorage.getItem('crops')) || [];
+            crops.splice(index, 1);
+            localStorage.setItem('crops', JSON.stringify(crops));
+            displayCrops();
+            alert('Crop has been deleted.');
+            removeFromBuyerPage(index);
+        }
+
+        function removeFromBuyerPage(index) {
+            // Assuming you have a similar structure for the buyer's page
+            const productCards = document.querySelectorAll('.product-card');
+            if (productCards[index]) {
+                productCards[index].remove();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', displayCrops);
+    </script>
+</body>
+</html>
